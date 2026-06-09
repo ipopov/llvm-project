@@ -3454,12 +3454,17 @@ uint64_t ASTWriter::WriteDeclContextLexicalBlock(ASTContext &Context,
   if (DC->decls_empty())
     return 0;
 
-  // In reduced BMI, we don't care the declarations in functions.
+  // In reduced BMI, we don't care the declarations in functions, unless they
+  // are templated functions, because their bodies may contain nested class/lambda
+  // definitions that are canonicalized and need mapping of local declarations.
   if (GeneratingReducedBMI && DC->isFunctionOrMethod()) {
-    if (const auto *FD = dyn_cast<FunctionDecl>(DC)) {
-      if (!FD->isDependentContext() || !FD->isThisDeclarationADefinition()) {
+    const DeclContext *ParentFD = DC;
+    while (ParentFD && !isa<FunctionDecl>(ParentFD)) {
+      ParentFD = ParentFD->getParent();
+    }
+    if (const auto *FD = dyn_cast_or_null<FunctionDecl>(ParentFD)) {
+      if (!FD->isTemplated())
         return 0;
-      }
     } else {
       return 0;
     }

@@ -4400,18 +4400,23 @@ Sema::SubstTemplateName(SourceLocation TemplateKWLoc,
 }
 
 static const Decl *getCanonicalLocalDecl(const Decl *D, Sema &SemaRef) {
+  // When storing ParmVarDecls in the local instantiation scope, we always
+  // want to use the ParmVarDecl from the canonical function declaration,
+  // since the map is then valid for any redeclaration or definition of that
+  // function.
   if (const ParmVarDecl *PV = dyn_cast<ParmVarDecl>(D)) {
     if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(PV->getDeclContext())) {
       unsigned i = PV->getFunctionScopeIndex();
-      if (i < FD->getNumParams() && FD->getParamDecl(i) == PV) {
+      // This parameter might be from a freestanding function type within the
+      // function and isn't necessarily referring to one of FD's parameters.
+      if (i < FD->getNumParams() && FD->getParamDecl(i) == PV)
         return FD->getCanonicalDecl()->getParamDecl(i);
-      }
     }
-  } else if (isa<VarDecl>(D) || isa<BindingDecl>(D)) {
-    return SemaRef.getCanonicalLocalDecl(D);
+    return D;
   }
-  return D;
+  return SemaRef.getCanonicalLocalDecl(D);
 }
+
 
 llvm::PointerUnion<Decl *, LocalInstantiationScope::DeclArgumentPack *> *
 LocalInstantiationScope::getInstantiationOfIfExists(const Decl *D) {
