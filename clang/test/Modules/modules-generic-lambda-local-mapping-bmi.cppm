@@ -3,9 +3,18 @@
 // RUN: split-file %s %t
 // RUN: cd %t
 //
-// RUN: %clang_cc1 -std=c++20 -I. m_template.cppm -emit-reduced-module-interface -o m_template.pcm
-// RUN: %clang_cc1 -std=c++20 -I. m_wrapper.cppm -emit-reduced-module-interface -fmodule-file=m_template=m_template.pcm -o m_wrapper.pcm
-// RUN: %clang_cc1 -std=c++20 -I. main.cpp -fmodule-file=m_template=m_template.pcm -fmodule-file=m_wrapper=m_wrapper.pcm -fsyntax-only -verify
+// RUN: %clang_cc1 -std=c++20 -I. m_template.cppm -emit-reduced-module-interface \
+// RUN:            -o m_template.pcm
+//
+// RUN: %clang_cc1 -std=c++20 -I. m_wrapper.cppm \
+// RUN:            -emit-reduced-module-interface \
+// RUN:            -fmodule-file=m_template=m_template.pcm \
+// RUN:            -o m_wrapper.pcm
+//
+// RUN: %clang_cc1 -std=c++20 -I. main.cpp \
+// RUN:            -fmodule-file=m_template=m_template.pcm \
+// RUN:            -fmodule-file=m_wrapper=m_wrapper.pcm \
+// RUN:            -fsyntax-only -verify
 
 //--- template_class.h
 #pragma once
