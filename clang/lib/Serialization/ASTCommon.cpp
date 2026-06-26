@@ -498,6 +498,9 @@ bool serialization::needsAnonymousDeclarationNumber(const NamedDecl *D) {
   if (D->getLexicalDeclContext()->isFunctionOrMethod()) {
     if (auto *VD = dyn_cast<VarDecl>(D))
       return VD->isStaticLocal();
+    if (const auto *TD = dyn_cast<TagDecl>(D))
+      if (TD->getLexicalDeclContext()->isDependentContext())
+        return false;
     // FIXME: What about CapturedDecls (and declarations nested within them)?
     return isa<TagDecl, BlockDecl>(D);
   }
